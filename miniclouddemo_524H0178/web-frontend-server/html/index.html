@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MyMiniCloud – Trang Chủ</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+
+  <body>
+    <!-- 🔹 NAVIGATION -->
+    <nav class="navbar">
+      <div class="nav-left">MyMiniCloud</div>
+      <ul class="nav-right">
+        <li><a href="/">Trang chủ</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="#services">Dịch vụ</a></li>
+      </ul>
+    </nav>
+
+    <!-- 🔹 HERO BANNER -->
+    <section class="hero">
+      <h1>Hệ Thống MiniCloud Mô Phỏng Cloud Platform</h1>
+      <p>Một dự án mô phỏng kiến trúc AWS / GCP / Azure với 9 loại server.</p>
+      <a href="/blog/" class="hero-btn">Khám phá Blog</a>
+    </section>
+
+    <!-- 🔹 FEATURE SECTION -->
+    <section id="services" class="features">
+      <h2>Các thành phần chính</h2>
+
+      <div class="feature-grid">
+        <!-- 1. Web Frontend -->
+        <div class="feature-card">
+          <h3>🌐 Web Frontend</h3>
+          <p>Trang web tĩnh chạy trên Nginx, cung cấp giao diện người dùng.</p>
+        </div>
+
+        <!-- 2. Backend API -->
+        <div class="feature-card">
+          <h3>⚙️ Backend API</h3>
+          <p>
+            Microservice Flask xử lý nghiệp vụ và kết nối đến các server khác.
+          </p>
+        </div>
+
+        <!-- 3. Database -->
+        <div class="feature-card">
+          <h3>💾 Database (MariaDB)</h3>
+          <p>Lưu trữ dữ liệu người dùng, metadata và thông tin hệ thống.</p>
+        </div>
+
+        <!-- 4. Authentication -->
+        <div class="feature-card">
+          <h3>🔐 Authentication (Keycloak)</h3>
+          <p>Cung cấp đăng nhập, cấp token và quản lý người dùng.</p>
+        </div>
+
+        <!-- 5. Notification Server -->
+        <div class="feature-card">
+          <h3>📣 Notification Server</h3>
+          <p>Xử lý gửi thông báo email hoặc sự kiện hệ thống.</p>
+        </div>
+
+        <!-- 6. Storage Server -->
+        <div class="feature-card">
+          <h3>📦 Storage Server (MinIO)</h3>
+          <p>Lưu trữ file, object storage tương tự AWS S3.</p>
+        </div>
+
+        <!-- 7. Logging Server -->
+        <div class="feature-card">
+          <h3>📝 Logging Server</h3>
+          <p>Thu thập và lưu lại log từ mọi dịch vụ để dễ theo dõi.</p>
+        </div>
+
+        <!-- 8. Cache Server -->
+        <div class="feature-card">
+          <h3>⚡ Cache Server (Redis)</h3>
+          <p>Lưu cache tạm thời giúp tăng tốc độ truy vấn.</p>
+        </div>
+
+        <!-- 9. Message Queue -->
+        <div class="feature-card">
+          <h3>📨 Message Queue (RabbitMQ)</h3>
+          <p>Hỗ trợ giao tiếp bất đồng bộ giữa các microservice.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🔹 FOOTER -->
+    <footer>
+      © 2025 MyMiniCloud Project — Designed by
+      <strong>524H0178</strong>
+    </footer>
+  </body>
+</html>

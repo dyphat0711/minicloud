@@ -1,0 +1,139 @@
+networks: { cloud-net: { name: cloud-net } }
+
+services:
+  # 1
+  web-frontend-server:
+    build: ./web-frontend-server
+    image: dyphat/web:dev
+    container_name: web-frontend-server
+    networks: [cloud-net]
+    ports: ["8080:80"]
+    volumes:
+      - ./web-frontend-server/html:/usr/share/nginx/html
+      - ./web-frontend-server/conf.default:/etc/nginx/conf.d/default.conf
+
+  # 2
+  application-backend-server:
+    build: ./application-backend-server
+    image: dyphat/app:dev
+    container_name: application-backend-server
+    networks: [cloud-net]
+    ports: ["8085:8081"]
+    environment:
+      OIDC_ISSUER: "http://authentication-identity-server:8080/realms/master"
+      OIDC_AUDIENCE: "myapp"
+
+  # 3
+  relational-database-server:
+    image: mariadb:11
+    container_name: relational-database-server
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: minicloud
+    volumes:
+      - ./relational-database-server/init:/docker-entrypoint-initdb.d:ro
+      - ./relational-database-server/data:/var/lib/mysql
+    ports: ["3306:3306"]
+    networks: [cloud-net]
+
+  # 4
+  authentication-identity-server:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: authentication-identity-server
+    command: ["start-dev", "--import-realm"]
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+    ports: ["8081:8080"]
+    volumes:
+      - ./authentication-identity-server/realm:/opt/keycloak/data/import:ro
+    networks: [cloud-net]
+    restart: unless-stopped
+
+  # 5
+  object-storage-server:
+    image: minio/minio
+    container_name: object-storage-server
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - ./object-storage-server/data:/data
+    ports: ["9000:9000", "9001:9001"]
+    networks: [cloud-net]
+
+  # 6
+  internal-dns-server:
+    image: internetsystemsconsortium/bind9:9.18
+    container_name: internal-dns-server
+    ports: ["1053:53/udp"]
+    volumes:
+      - ./internal-dns-server/named.conf.options:/etc/bind/named.conf.options:ro
+      - ./internal-dns-server/named.conf.local:/etc/bind/named.conf.local:ro
+      - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro
+      - ./internal-dns-server/named.conf:/etc/bind/named.conf:ro file Docker yml
+    networks: [cloud-net]
+
+  # 7.1
+  monitoring-node-exporter-server:
+    image: prom/node-exporter:latest
+    container_name: monitoring-node-exporter-server
+    ports: ["9100:9100"]
+    networks: [cloud-net]
+
+  # 7.2
+  monitoring-prometheus-server:
+    image: prom/prometheus:latest
+    container_name: monitoring-prometheus-server
+    ports: ["9090:9090"]
+    volumes:
+      - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks: [cloud-net]
+
+  # 8
+  monitoring-grafana-dashboard-server:
+    image: grafana/grafana:latest
+    container_name: monitoring-grafana-dashboard-server
+    ports: ["3000:3000"]
+    volumes:
+      - ./monitoring-grafana-dashboard-server:/var/lib/grafana
+    networks: [cloud-net]
+
+  # For advanced monitoring of NGINX
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    ports:
+      - "9113:9113"
+    command:
+      - "-nginx.scrape-uri=http://web-frontend-server/nginx_status"
+    networks:
+      - cloud-net
+
+  # 9
+  api-gateway-proxy-server:
+    image: nginx:stable
+    container_name: api-gateway-proxy-server
+    depends_on:
+      - web-frontend-server
+      - application-backend-server
+      - authentication-identity-server
+    ports: ["80:80"]
+    volumes:
+      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks: [cloud-net]
+    restart: unless-stopped
+
+  # 10
+  web-frontend-server1:
+    build: ./web-frontend-server1
+    container_name: web-frontend-server1
+    networks: [cloud-net]
+
+  web-frontend-server2:
+    build: ./web-frontend-server2
+    container_name: web-frontend-server2
+    networks: [cloud-net]

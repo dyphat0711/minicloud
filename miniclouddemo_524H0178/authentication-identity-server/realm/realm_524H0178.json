@@ -1,0 +1,47 @@
+{
+  "realm": "realm_524H0178",
+  "enabled": true,
+
+  "loginWithEmailAllowed": true,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": false,
+
+  "requiredActions": [],
+
+  "clients": [
+    {
+      "clientId": "flask-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"]
+    }
+  ],
+
+  "users": [
+    {
+      "username": "sv01",
+      "enabled": true,
+      "email": "camtien8979@gmail.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [
+        { "type": "password", "value": "123", "temporary": false }
+      ]
+    },
+    {
+      "username": "sv02",
+      "enabled": true,
+      "email": "camnga@gmail.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [
+        { "type": "password", "value": "123456", "temporary": false }
+      ]
+    }
+  ]
+}
