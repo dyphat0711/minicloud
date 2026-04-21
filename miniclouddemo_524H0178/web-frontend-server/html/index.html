@@ -2,95 +2,250 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <title>MyMiniCloud – Trang Chủ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MyMiniCloud – Hệ Thống Cloud Mô Phỏng</title>
+    <meta name="description" content="Dự án mô phỏng kiến trúc Cloud Platform (AWS/GCP/Azure) với 9 thành phần server chạy trên Docker & Nginx." />
     <link rel="stylesheet" href="/style.css" />
   </head>
 
   <body>
-    <!-- 🔹 NAVIGATION -->
-    <nav class="navbar">
+    <!-- NAVIGATION -->
+    <nav class="navbar" id="navbar">
       <div class="nav-left">MyMiniCloud</div>
       <ul class="nav-right">
-        <li><a href="/">Trang chủ</a></li>
+        <li><a href="/" class="active">Trang chủ</a></li>
         <li><a href="/blog/">Blog</a></li>
         <li><a href="#services">Dịch vụ</a></li>
+        <li><a href="#architecture">Kiến trúc</a></li>
       </ul>
     </nav>
 
-    <!-- 🔹 HERO BANNER -->
+    <!-- HERO -->
     <section class="hero">
-      <h1>Hệ Thống MiniCloud Mô Phỏng Cloud Platform</h1>
-      <p>Một dự án mô phỏng kiến trúc AWS / GCP / Azure với 9 loại server.</p>
-      <a href="/blog/" class="hero-btn">Khám phá Blog</a>
-    </section>
+      <div class="hero-bg">
+        <div class="hero-glow-1"></div>
+        <div class="hero-glow-2"></div>
+        <div class="hero-grid"></div>
+      </div>
 
-    <!-- 🔹 FEATURE SECTION -->
-    <section id="services" class="features">
-      <h2>Các thành phần chính</h2>
-
-      <div class="feature-grid">
-        <!-- 1. Web Frontend -->
-        <div class="feature-card">
-          <h3>🌐 Web Frontend</h3>
-          <p>Trang web tĩnh chạy trên Nginx, cung cấp giao diện người dùng.</p>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span></span>
+          Cloud Architecture Demo · 524H0178
         </div>
 
-        <!-- 2. Backend API -->
-        <div class="feature-card">
-          <h3>⚙️ Backend API</h3>
-          <p>
-            Microservice Flask xử lý nghiệp vụ và kết nối đến các server khác.
-          </p>
+        <h1 class="hero-title">
+          Hệ Thống <span class="gradient-text">MiniCloud</span><br />
+          Mô Phỏng Cloud Platform
+        </h1>
+
+        <p class="hero-subtitle">
+          Kiến trúc vi dịch vụ (microservices) mô phỏng AWS · GCP · Azure.<br />
+          Chạy hoàn toàn trên Docker với 9 thành phần server kết hợp chặt chẽ.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#services" class="btn-primary">Khám phá dịch vụ →</a>
+          <a href="/blog/" class="btn-ghost">Đọc Blog</a>
         </div>
 
-        <!-- 3. Database -->
-        <div class="feature-card">
-          <h3>💾 Database (MariaDB)</h3>
-          <p>Lưu trữ dữ liệu người dùng, metadata và thông tin hệ thống.</p>
-        </div>
-
-        <!-- 4. Authentication -->
-        <div class="feature-card">
-          <h3>🔐 Authentication (Keycloak)</h3>
-          <p>Cung cấp đăng nhập, cấp token và quản lý người dùng.</p>
-        </div>
-
-        <!-- 5. Notification Server -->
-        <div class="feature-card">
-          <h3>📣 Notification Server</h3>
-          <p>Xử lý gửi thông báo email hoặc sự kiện hệ thống.</p>
-        </div>
-
-        <!-- 6. Storage Server -->
-        <div class="feature-card">
-          <h3>📦 Storage Server (MinIO)</h3>
-          <p>Lưu trữ file, object storage tương tự AWS S3.</p>
-        </div>
-
-        <!-- 7. Logging Server -->
-        <div class="feature-card">
-          <h3>📝 Logging Server</h3>
-          <p>Thu thập và lưu lại log từ mọi dịch vụ để dễ theo dõi.</p>
-        </div>
-
-        <!-- 8. Cache Server -->
-        <div class="feature-card">
-          <h3>⚡ Cache Server (Redis)</h3>
-          <p>Lưu cache tạm thời giúp tăng tốc độ truy vấn.</p>
-        </div>
-
-        <!-- 9. Message Queue -->
-        <div class="feature-card">
-          <h3>📨 Message Queue (RabbitMQ)</h3>
-          <p>Hỗ trợ giao tiếp bất đồng bộ giữa các microservice.</p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-number">9</div>
+            <div class="hero-stat-label">Components</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">100%</div>
+            <div class="hero-stat-label">Dockerized</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">3</div>
+            <div class="hero-stat-label">Cloud Patterns</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">2026</div>
+            <div class="hero-stat-label">Release Year</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 🔹 FOOTER -->
-    <footer>
-      © 2025 MyMiniCloud Project — Designed by
-      <strong>524H0178</strong>
+    <!-- SERVICES -->
+    <section class="services" id="services">
+      <div class="services-inner">
+        <div class="section-header">
+          <div class="section-pill">Dịch vụ</div>
+          <h2 class="section-title">9 Thành Phần Hệ Thống</h2>
+          <p class="section-desc">
+            Mỗi thành phần chạy trong container riêng biệt, giao tiếp qua API
+            và message queue, phản ánh đúng kiến trúc cloud thực tế.
+          </p>
+        </div>
+
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon">🌐</div>
+            <h3>Web Frontend</h3>
+            <p>Máy chủ Nginx phục vụ giao diện tĩnh (HTML/CSS). Điểm vào duy nhất từ phía người dùng, cấu hình reverse proxy linh hoạt.</p>
+            <span class="service-tag">Nginx · Static</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">⚙️</div>
+            <h3>Backend API</h3>
+            <p>REST API xử lý toàn bộ nghiệp vụ hệ thống. Nhận request từ frontend, điều phối các dịch vụ nội bộ và trả kết quả.</p>
+            <span class="service-tag">Flask · REST API</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">🗄️</div>
+            <h3>Database (MariaDB)</h3>
+            <p>Hệ quản trị cơ sở dữ liệu quan hệ lưu trữ toàn bộ dữ liệu nghiệp vụ, người dùng và cấu hình hệ thống.</p>
+            <span class="service-tag">MariaDB · RDBMS</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">🔐</div>
+            <h3>Authentication (Keycloak)</h3>
+            <p>Giải pháp xác thực và phân quyền (Identity Provider). Hỗ trợ OAuth 2.0, OpenID Connect và Single Sign-On.</p>
+            <span class="service-tag">Keycloak · OAuth2 · SSO</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">🔔</div>
+            <h3>Notification Server</h3>
+            <p>Dịch vụ gửi thông báo đa kênh: Email, SMS. Nhận sự kiện từ hàng đợi và xử lý phân phối thông điệp.</p>
+            <span class="service-tag">Email · SMS · Event</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">📦</div>
+            <h3>Storage Server (MinIO)</h3>
+            <p>Lưu trữ đối tượng (Object Storage) tương thích S3. Quản lý file upload, media và backup dữ liệu nhị phân.</p>
+            <span class="service-tag">MinIO · S3-Compatible</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">📊</div>
+            <h3>Logging Server</h3>
+            <p>Hệ thống thu thập và phân tích log tập trung. Theo dõi toàn bộ hoạt động và giám sát hiệu năng hệ thống.</p>
+            <span class="service-tag">Logging · Monitoring</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">⚡</div>
+            <h3>Cache Server (Redis)</h3>
+            <p>In-memory data store tốc độ cao dùng cho cache, session và rate limiting. Giảm tải đáng kể cho database chính.</p>
+            <span class="service-tag">Redis · Cache · Session</span>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">🐇</div>
+            <h3>Message Queue (RabbitMQ)</h3>
+            <p>Message broker điều phối giao tiếp bất đồng bộ giữa các service. Đảm bảo độ tin cậy và khả năng mở rộng.</p>
+            <span class="service-tag">RabbitMQ · AMQP · Async</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="architecture" id="architecture">
+      <div class="architecture-inner">
+        <div class="section-header">
+          <div class="section-pill">Kiến trúc</div>
+          <h2 class="section-title">Sơ Đồ Luồng Hệ Thống</h2>
+          <p class="section-desc">
+            Các thành phần được phân tầng rõ ràng, giao tiếp qua API hoặc
+            message queue, phản ánh kiến trúc microservices hiện đại.
+          </p>
+        </div>
+
+        <div class="arch-card">
+          <div class="arch-layer">
+            <div class="arch-layer-label">Tầng khách hàng</div>
+            <div class="arch-row">
+              <div class="arch-node primary">🖥️ Browser / Client</div>
+            </div>
+          </div>
+
+          <div class="arch-arrow">↓</div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">Tầng giao diện</div>
+            <div class="arch-row">
+              <div class="arch-node accent">🌐 Web Frontend · Nginx :80</div>
+            </div>
+          </div>
+
+          <div class="arch-arrow">↓</div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">Tầng xử lý nghiệp vụ</div>
+            <div class="arch-row">
+              <div class="arch-node primary">⚙️ Backend API</div>
+              <div class="arch-node">🔐 Keycloak</div>
+            </div>
+          </div>
+
+          <div class="arch-arrow">↓</div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">Tầng dữ liệu &amp; hạ tầng</div>
+            <div class="arch-row">
+              <div class="arch-node">🗄️ MariaDB</div>
+              <div class="arch-node">📦 MinIO</div>
+              <div class="arch-node">⚡ Redis</div>
+              <div class="arch-node">🐇 RabbitMQ</div>
+            </div>
+          </div>
+
+          <div class="arch-arrow">↓</div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-label">Tầng hỗ trợ &amp; quan sát</div>
+            <div class="arch-row">
+              <div class="arch-node">📊 Logging</div>
+              <div class="arch-node">🔔 Notification</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+      <div class="cta-inner">
+        <div class="hero-badge" style="margin-bottom:1.5rem;">
+          <span></span>Blog &amp; Tài liệu
+        </div>
+        <h2>Tìm Hiểu Thêm Về Công Nghệ</h2>
+        <p>
+          Khám phá các bài viết chuyên sâu về AI, Cloud Computing, môi trường
+          và xu hướng công nghệ 2026 trên blog của chúng tôi.
+        </p>
+        <a href="/blog/" class="btn-primary">Đọc Blog ngay →</a>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">MyMiniCloud</div>
+        <p class="footer-copy">© 2026 MyMiniCloud · MSSV: 524H0178</p>
+        <div class="footer-links">
+          <a href="/">Trang chủ</a>
+          <a href="/blog/">Blog</a>
+          <a href="#services">Dịch vụ</a>
+        </div>
+      </div>
     </footer>
+
+    <script>
+      const nav = document.getElementById('navbar');
+      window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 20);
+      }, { passive: true });
+    </script>
   </body>
 </html>
