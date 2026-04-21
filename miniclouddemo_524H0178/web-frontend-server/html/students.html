@@ -1,84 +1,524 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard </title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .dashboard-header { background: #2c3e50; color: white; padding: 2rem 0; margin-bottom: 2rem; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Sinh Viên – MyMiniCloud</title>
+    <meta name="description" content="Trang quản lý sinh viên với đầy đủ CRUD (Create, Read, Update, Delete) qua REST API." />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/students.css" />
+  </head>
 
-<div class="dashboard-header text-center">
-    <h1>Hệ Thống Quản Lý Sinh Viên</h1>
-    <p>Triển khai trên AWS EC2 - IP: 52.74.37.125</p>
-</div>
+  <body>
+    <!-- NAVIGATION -->
+    <nav class="navbar" id="navbar">
+      <div class="nav-left">MyMiniCloud</div>
+      <ul class="nav-right">
+        <li><a href="/">Trang chủ</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/students.html" class="active">Quản lý SV</a></li>
+      </ul>
+    </nav>
 
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="card p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-secondary">Danh sách sinh viên</h3>
-                    <button class="btn btn-primary" onclick="fetchStudentData()">
-                        Làm mới dữ liệu
-                    </button>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Mã SV</th>
-                                <th>Họ và Tên</th>
-                                <th>Ngày sinh</th>
-                                <th>Chuyên ngành</th>
-                            </tr>
-                        </thead>
-                        <tbody id="student-list">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- PAGE HERO -->
+    <section class="page-hero">
+      <div class="page-hero-bg"></div>
+      <div class="page-hero-content">
+        <div class="hero-badge">
+          <span></span>
+          Student CRUD · Full Stack Demo
         </div>
-    </div>
-</div>
+        <h1 class="page-hero-title">
+          Hệ Thống <span class="gradient-text">Quản Lý Sinh Viên</span>
+        </h1>
+        <p class="page-hero-subtitle">
+          Giao diện CRUD đầy đủ: thêm · sửa · xoá · tìm kiếm.<br />
+          Backend Flask · MariaDB · triển khai trên AWS EC2.
+        </p>
+      </div>
+    </section>
 
-<script>
-    async function fetchStudentData() {
-        const tbody = document.getElementById('student-list');
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Đang tải dữ liệu từ API...</td></tr>';
+    <!-- CRUD SECTION -->
+    <main class="crud-main">
+      <div class="crud-inner">
+
+        <!-- Toolbar -->
+        <div class="crud-toolbar">
+          <div class="crud-search">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Tìm theo mã SV, tên hoặc chuyên ngành..."
+              autocomplete="off"
+            />
+          </div>
+          <div class="crud-actions">
+            <button class="btn-secondary" id="refreshBtn">
+              <span>↻</span> Làm mới
+            </button>
+            <button class="btn-primary" id="openCreateBtn">
+              <span>+</span> Thêm sinh viên
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="crud-stats">
+          <div class="stat-item">
+            <div class="stat-label">Tổng sinh viên</div>
+            <div class="stat-value" id="statTotal">—</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Đang hiển thị</div>
+            <div class="stat-value" id="statShown">—</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Ngành nhiều nhất</div>
+            <div class="stat-value" id="statTopMajor">—</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã SV</th>
+                <th>Họ và tên</th>
+                <th>Ngày sinh</th>
+                <th>Chuyên ngành</th>
+                <th class="th-action">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="studentTbody">
+              <tr>
+                <td colspan="5" class="empty-row">⏳ Đang tải dữ liệu...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ============================================
+         MODAL — Create / Edit
+    ============================================ -->
+    <div class="modal-overlay" id="formModal" aria-hidden="true">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="formTitle">Thêm sinh viên mới</h2>
+          <button class="modal-close" data-close-modal aria-label="Đóng">×</button>
+        </div>
+
+        <form id="studentForm" class="modal-body" novalidate>
+          <input type="hidden" id="formMode" value="create" />
+
+          <div class="form-group">
+            <label for="fStudentId">Mã sinh viên <span class="req">*</span></label>
+            <input type="text" id="fStudentId" required placeholder="VD: 52400003" />
+            <div class="form-hint">Không được trùng với SV đã có</div>
+          </div>
+
+          <div class="form-group">
+            <label for="fFullname">Họ và tên <span class="req">*</span></label>
+            <input type="text" id="fFullname" required placeholder="VD: Nguyễn Văn A" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fDob">Ngày sinh <span class="req">*</span></label>
+              <input type="date" id="fDob" required />
+            </div>
+
+            <div class="form-group">
+              <label for="fMajor">Chuyên ngành <span class="req">*</span></label>
+              <input type="text" id="fMajor" required placeholder="VD: Computer Science" list="majorList" />
+              <datalist id="majorList">
+                <option value="Computer Science"></option>
+                <option value="Information Technology"></option>
+                <option value="Software Engineering"></option>
+                <option value="Data Science"></option>
+                <option value="Artificial Intelligence"></option>
+                <option value="Cybersecurity"></option>
+              </datalist>
+            </div>
+          </div>
+        </form>
+
+        <div class="modal-footer">
+          <button class="btn-ghost-light" data-close-modal>Huỷ</button>
+          <button class="btn-primary" id="submitBtn">Lưu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================
+         MODAL — Delete confirm
+    ============================================ -->
+    <div class="modal-overlay" id="deleteModal" aria-hidden="true">
+      <div class="modal modal-small">
+        <div class="modal-header">
+          <h2>Xác nhận xoá</h2>
+          <button class="modal-close" data-close-modal aria-label="Đóng">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="delete-warning">
+            ⚠️ Bạn có chắc muốn xoá sinh viên
+            <strong id="deleteTarget">—</strong>?<br />
+            Hành động này không thể hoàn tác.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost-light" data-close-modal>Huỷ</button>
+          <button class="btn-danger" id="confirmDeleteBtn">Xoá</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-stack" id="toastStack"></div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">MyMiniCloud</div>
+        <p class="footer-copy">© 2026 MyMiniCloud · MSSV: 524H0178</p>
+        <div class="footer-links">
+          <a href="/">Trang chủ</a>
+          <a href="/blog/">Blog</a>
+          <a href="/students.html">Quản lý SV</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      /* ============================================================
+         API Configuration
+         Uses /api/ path from the API Gateway (Nginx) which strips
+         "/api/" before forwarding to Flask backend.
+         Gateway route:  /api/student  ->  Flask /student
+      ============================================================ */
+      const API_BASE = "/api";
+
+      /* ============================================================
+         DOM helpers
+      ============================================================ */
+      const $  = (id) => document.getElementById(id);
+      const qs = (sel) => document.querySelector(sel);
+      const tbody = $("studentTbody");
+
+      let cache = [];
+      let filtered = [];
+
+      /* ============================================================
+         Navbar scroll behavior
+      ============================================================ */
+      const nav = $("navbar");
+      window.addEventListener("scroll", () => {
+        nav.classList.toggle("scrolled", window.scrollY > 20);
+      }, { passive: true });
+
+      /* ============================================================
+         Toast notifications
+      ============================================================ */
+      function toast(msg, type = "success") {
+        const el = document.createElement("div");
+        el.className = `toast toast-${type}`;
+        el.innerHTML = `
+          <span class="toast-icon">${type === "success" ? "✓" : type === "error" ? "✕" : "ℹ"}</span>
+          <span class="toast-msg">${msg}</span>
+        `;
+        $("toastStack").appendChild(el);
+        requestAnimationFrame(() => el.classList.add("show"));
+        setTimeout(() => {
+          el.classList.remove("show");
+          setTimeout(() => el.remove(), 300);
+        }, 3200);
+      }
+
+      /* ============================================================
+         Modal helpers
+      ============================================================ */
+      function openModal(id) {
+        $(id).classList.add("open");
+        $(id).setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal(id) {
+        $(id).classList.remove("open");
+        $(id).setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+
+      document.querySelectorAll("[data-close-modal]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          btn.closest(".modal-overlay").classList.remove("open");
+          document.body.style.overflow = "";
+        });
+      });
+
+      document.querySelectorAll(".modal-overlay").forEach(overlay => {
+        overlay.addEventListener("click", e => {
+          if (e.target === overlay) {
+            overlay.classList.remove("open");
+            document.body.style.overflow = "";
+          }
+        });
+      });
+
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+          document.querySelectorAll(".modal-overlay.open").forEach(m => {
+            m.classList.remove("open");
+            document.body.style.overflow = "";
+          });
+        }
+      });
+
+      /* ============================================================
+         API calls
+      ============================================================ */
+      async function api(method, path, body) {
+        const options = {
+          method,
+          headers: { "Content-Type": "application/json" }
+        };
+        if (body) options.body = JSON.stringify(body);
+
+        const res = await fetch(`${API_BASE}${path}`, options);
+        let data = {};
+        try { data = await res.json(); } catch {}
+        if (!res.ok) {
+          throw new Error(data.message || `HTTP ${res.status}`);
+        }
+        return data;
+      }
+
+      /* ============================================================
+         Render table
+      ============================================================ */
+      function render(list) {
+        if (!list.length) {
+          tbody.innerHTML = `
+            <tr><td colspan="5" class="empty-row">
+              📭 Không có sinh viên nào khớp bộ lọc.
+            </td></tr>`;
+        } else {
+          tbody.innerHTML = list.map(s => `
+            <tr>
+              <td><span class="id-badge">${escapeHtml(s.student_id)}</span></td>
+              <td class="td-name">${escapeHtml(s.fullname)}</td>
+              <td class="td-dob">${formatDate(s.dob)}</td>
+              <td><span class="major-tag">${escapeHtml(s.major)}</span></td>
+              <td class="td-actions">
+                <button class="icon-btn edit-btn"
+                  data-id="${escapeHtml(s.student_id)}"
+                  title="Chỉnh sửa">✎</button>
+                <button class="icon-btn delete-btn"
+                  data-id="${escapeHtml(s.student_id)}"
+                  data-name="${escapeHtml(s.fullname)}"
+                  title="Xoá">🗑</button>
+              </td>
+            </tr>
+          `).join("");
+
+          tbody.querySelectorAll(".edit-btn").forEach(b => {
+            b.addEventListener("click", () => openEditForm(b.dataset.id));
+          });
+          tbody.querySelectorAll(".delete-btn").forEach(b => {
+            b.addEventListener("click", () => openDeleteConfirm(b.dataset.id, b.dataset.name));
+          });
+        }
+
+        updateStats(list);
+      }
+
+      function updateStats(list) {
+        $("statTotal").textContent = cache.length;
+        $("statShown").textContent = list.length;
+
+        if (!cache.length) {
+          $("statTopMajor").textContent = "—";
+          return;
+        }
+        const counts = {};
+        cache.forEach(s => { counts[s.major] = (counts[s.major] || 0) + 1; });
+        const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        $("statTopMajor").textContent = top ? top[0] : "—";
+      }
+
+      function escapeHtml(str) {
+        if (str == null) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function formatDate(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d)) return iso;
+        return d.toLocaleDateString("vi-VN", {
+          day: "2-digit", month: "2-digit", year: "numeric"
+        });
+      }
+
+      /* ============================================================
+         Load list
+      ============================================================ */
+      async function loadStudents() {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-row">⏳ Đang tải...</td></tr>`;
+        try {
+          const data = await api("GET", "/student");
+          cache = Array.isArray(data) ? data : [];
+          applyFilter();
+        } catch (err) {
+          tbody.innerHTML = `
+            <tr><td colspan="5" class="empty-row error">
+              ❌ Lỗi kết nối API: ${escapeHtml(err.message)}
+            </td></tr>`;
+          cache = [];
+          updateStats([]);
+        }
+      }
+
+      /* ============================================================
+         Filter / search
+      ============================================================ */
+      function applyFilter() {
+        const kw = $("searchInput").value.trim().toLowerCase();
+        filtered = !kw ? cache : cache.filter(s =>
+          (s.student_id || "").toLowerCase().includes(kw) ||
+          (s.fullname   || "").toLowerCase().includes(kw) ||
+          (s.major      || "").toLowerCase().includes(kw)
+        );
+        render(filtered);
+      }
+
+      let searchTimer;
+      $("searchInput").addEventListener("input", () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyFilter, 160);
+      });
+
+      $("refreshBtn").addEventListener("click", loadStudents);
+
+      /* ============================================================
+         Create / Edit form
+      ============================================================ */
+      function resetForm() {
+        $("studentForm").reset();
+        $("formMode").value = "create";
+        $("fStudentId").disabled = false;
+      }
+
+      function openCreateForm() {
+        resetForm();
+        $("formTitle").textContent = "Thêm sinh viên mới";
+        $("submitBtn").textContent = "Tạo mới";
+        openModal("formModal");
+        setTimeout(() => $("fStudentId").focus(), 100);
+      }
+
+      function openEditForm(id) {
+        const s = cache.find(x => x.student_id === id);
+        if (!s) return toast("Không tìm thấy sinh viên", "error");
+
+        resetForm();
+        $("formMode").value = "edit";
+        $("formTitle").textContent = `Chỉnh sửa: ${s.student_id}`;
+        $("submitBtn").textContent = "Lưu thay đổi";
+        $("fStudentId").value = s.student_id;
+        $("fStudentId").disabled = true;
+        $("fFullname").value = s.fullname;
+        $("fDob").value = (s.dob || "").split("T")[0];
+        $("fMajor").value = s.major;
+        openModal("formModal");
+        setTimeout(() => $("fFullname").focus(), 100);
+      }
+
+      $("openCreateBtn").addEventListener("click", openCreateForm);
+
+      $("studentForm").addEventListener("submit", e => {
+        e.preventDefault();
+        $("submitBtn").click();
+      });
+
+      $("submitBtn").addEventListener("click", async () => {
+        const mode = $("formMode").value;
+        const payload = {
+          student_id: $("fStudentId").value.trim(),
+          fullname:   $("fFullname").value.trim(),
+          dob:        $("fDob").value,
+          major:      $("fMajor").value.trim()
+        };
+
+        if (!payload.student_id || !payload.fullname || !payload.dob || !payload.major) {
+          toast("Vui lòng điền đầy đủ các trường bắt buộc", "error");
+          return;
+        }
+
+        $("submitBtn").disabled = true;
+        const oldText = $("submitBtn").textContent;
+        $("submitBtn").textContent = "⏳ Đang lưu...";
 
         try {
-            // Gọi đến API thông qua Gateway (cùng IP nên dùng đường dẫn tương đối)
-            const response = await fetch('/student/');
-            const data = await response.json();
-
-            tbody.innerHTML = '';
-            data.forEach(student => {
-                const row = `
-                    <tr>
-                        <td><strong>${student.student_id}</strong></td>
-                        <td>${student.fullname}</td>
-                        <td>${student.dob}</td>
-                        <td><span class="badge bg-info text-dark">${student.major}</span></td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        } catch (error) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Lỗi kết nối API! Vui lòng kiểm tra lại server.</td></tr>';
-            console.error('Lỗi:', error);
+          if (mode === "create") {
+            await api("POST", "/student", payload);
+            toast(`Đã thêm sinh viên ${payload.student_id}`);
+          } else {
+            const { student_id, ...body } = payload;
+            await api("PUT", `/student/${encodeURIComponent(student_id)}`, body);
+            toast(`Đã cập nhật ${student_id}`);
+          }
+          closeModal("formModal");
+          await loadStudents();
+        } catch (err) {
+          toast(`Lỗi: ${err.message}`, "error");
+        } finally {
+          $("submitBtn").disabled = false;
+          $("submitBtn").textContent = oldText;
         }
-    }
+      });
 
-    // Tự động tải dữ liệu khi mở trang
-    window.onload = fetchStudentData;
-</script>
+      /* ============================================================
+         Delete
+      ============================================================ */
+      let deleteTargetId = null;
 
-</body>
+      function openDeleteConfirm(id, name) {
+        deleteTargetId = id;
+        $("deleteTarget").textContent = `${id} — ${name}`;
+        openModal("deleteModal");
+      }
+
+      $("confirmDeleteBtn").addEventListener("click", async () => {
+        if (!deleteTargetId) return;
+        $("confirmDeleteBtn").disabled = true;
+        $("confirmDeleteBtn").textContent = "⏳ Đang xoá...";
+        try {
+          await api("DELETE", `/student/${encodeURIComponent(deleteTargetId)}`);
+          toast(`Đã xoá ${deleteTargetId}`);
+          closeModal("deleteModal");
+          await loadStudents();
+        } catch (err) {
+          toast(`Lỗi xoá: ${err.message}`, "error");
+        } finally {
+          $("confirmDeleteBtn").disabled = false;
+          $("confirmDeleteBtn").textContent = "Xoá";
+          deleteTargetId = null;
+        }
+      });
+
+      /* ============================================================
+         Init
+      ============================================================ */
+      loadStudents();
+    </script>
+  </body>
 </html>

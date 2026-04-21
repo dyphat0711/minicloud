@@ -1,6 +1,7 @@
 {
   "realm": "realm_524H0178",
   "enabled": true,
+  "sslRequired": "none",
 
   "loginWithEmailAllowed": true,
   "registrationAllowed": false,
