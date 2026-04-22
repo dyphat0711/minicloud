@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh Bạ Sinh Viên – MyMiniCloud</title>
+    <meta name="description" content="Danh bạ sinh viên công khai — hiển thị dạng card grid từ REST API /student." />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/catalog.css" />
+  </head>
+
+  <body>
+    <!-- NAVIGATION -->
+    <nav class="navbar" id="navbar">
+      <div class="nav-left">MyMiniCloud</div>
+      <ul class="nav-right">
+        <li><a href="/">Trang chủ</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/catalog.html" class="active">Danh bạ SV</a></li>
+        <li><a href="/students.html">Quản lý</a></li>
+      </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section class="catalog-hero">
+      <div class="catalog-hero-bg"></div>
+      <div class="catalog-hero-content">
+        <div class="hero-badge">
+          <span></span>
+          Public Directory · REST Data
+        </div>
+        <h1 class="catalog-hero-title">
+          Danh Bạ <span class="gradient-text">Sinh Viên</span>
+        </h1>
+        <p class="catalog-hero-subtitle">
+          Dữ liệu được lấy trực tiếp từ REST API
+          <code>GET /api/student</code> qua API Gateway.
+        </p>
+
+        <!-- Search in hero -->
+        <div class="catalog-search">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Tìm theo tên, mã SV, hoặc chuyên ngành..."
+            autocomplete="off"
+          />
+          <span class="search-count" id="searchCount">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATALOG -->
+    <main class="catalog-main">
+      <div class="catalog-inner">
+
+        <!-- Filter chips -->
+        <div class="catalog-filters" id="majorFilters">
+          <button class="chip active" data-major="all">Tất cả</button>
+        </div>
+
+        <!-- Card grid -->
+        <div class="catalog-grid" id="catalogGrid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="catalog-empty" id="emptyState" hidden>
+          <div class="empty-icon">📭</div>
+          <h3>Không tìm thấy sinh viên</h3>
+          <p>Thử thay đổi từ khoá tìm kiếm hoặc xoá bộ lọc.</p>
+        </div>
+
+        <!-- Error state -->
+        <div class="catalog-error" id="errorState" hidden>
+          <div class="error-icon">⚠️</div>
+          <h3>Không tải được dữ liệu</h3>
+          <p id="errorMessage">—</p>
+          <button class="btn-primary" onclick="loadData()">Thử lại</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detailModal" aria-hidden="true">
+      <div class="modal modal-detail">
+        <button class="modal-close-float" data-close-modal aria-label="Đóng">×</button>
+        <div class="detail-hero">
+          <div class="detail-avatar" id="detailAvatar">?</div>
+          <div class="detail-meta">
+            <div class="detail-id" id="detailId">—</div>
+            <h2 class="detail-name" id="detailName">—</h2>
+            <div class="detail-major" id="detailMajor">—</div>
+          </div>
+        </div>
+        <div class="detail-body">
+          <div class="detail-row">
+            <div class="detail-label">Ngày sinh</div>
+            <div class="detail-value" id="detailDob">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Tuổi</div>
+            <div class="detail-value" id="detailAge">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Cung hoàng đạo</div>
+            <div class="detail-value" id="detailZodiac">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Mã sinh viên</div>
+            <div class="detail-value"><code id="detailIdCode">—</code></div>
+          </div>
+        </div>
+        <div class="detail-footer">
+          <a href="/students.html" class="btn-ghost-light">Đi tới Quản lý</a>
+          <button class="btn-primary" data-close-modal>Đóng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">MyMiniCloud</div>
+        <p class="footer-copy">© 2026 MyMiniCloud · MSSV: 524H0178</p>
+        <div class="footer-links">
+          <a href="/">Trang chủ</a>
+          <a href="/blog/">Blog</a>
+          <a href="/catalog.html">Danh bạ SV</a>
+          <a href="/students.html">Quản lý</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      /* ============================================================
+         Config
+      ============================================================ */
+      const API_URL = "/api/student";
+
+      const $  = (id) => document.getElementById(id);
+      const grid = $("catalogGrid");
+
+      let all = [];
+      let currentMajor = "all";
+
+      /* ----------------- Navbar scroll ----------------- */
+      const nav = $("navbar");
+      window.addEventListener("scroll", () => {
+        nav.classList.toggle("scrolled", window.scrollY > 20);
+      }, { passive: true });
+
+      /* ----------------- Modal helpers ----------------- */
+      function openModal(id) {
+        $(id).classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+      function closeModal(id) {
+        $(id).classList.remove("open");
+        document.body.style.overflow = "";
+      }
+      document.querySelectorAll("[data-close-modal]").forEach(b => {
+        b.addEventListener("click", () => closeModal(b.closest(".modal-overlay").id));
+      });
+      document.querySelectorAll(".modal-overlay").forEach(o => {
+        o.addEventListener("click", e => {
+          if (e.target === o) closeModal(o.id);
+        });
+      });
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+          document.querySelectorAll(".modal-overlay.open").forEach(m => closeModal(m.id));
+        }
+      });
+
+      /* ----------------- Utils ----------------- */
+      function escapeHtml(s) {
+        if (s == null) return "";
+        return String(s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function initial(name) {
+        if (!name) return "?";
+        const parts = name.trim().split(/\s+/);
+        return (parts[parts.length - 1][0] || parts[0][0] || "?").toUpperCase();
+      }
+
+      function hashColor(seed) {
+        let h = 0;
+        for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+        const palette = [
+          ["#4f46e5", "#7c3aed"],
+          ["#06b6d4", "#0284c7"],
+          ["#10b981", "#059669"],
+          ["#f59e0b", "#ea580c"],
+          ["#ec4899", "#db2777"],
+          ["#8b5cf6", "#6366f1"],
+          ["#14b8a6", "#0891b2"],
+          ["#f43f5e", "#e11d48"]
+        ];
+        return palette[h % palette.length];
+      }
+
+      function formatDate(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d)) return iso;
+        return d.toLocaleDateString("vi-VN", {
+          day: "2-digit", month: "long", year: "numeric"
+        });
+      }
+
+      function ageFrom(iso) {
+        if (!iso) return null;
+        const d = new Date(iso);
+        if (isNaN(d)) return null;
+        const now = new Date();
+        let age = now.getFullYear() - d.getFullYear();
+        const m = now.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+        return age;
+      }
+
+      function zodiac(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d)) return "—";
+        const m = d.getMonth() + 1, day = d.getDate();
+        const signs = [
+          [1, 20, "Ma Kết ♑"], [2, 19, "Bảo Bình ♒"],
+          [3, 20, "Song Ngư ♓"], [4, 19, "Bạch Dương ♈"],
+          [5, 20, "Kim Ngưu ♉"], [6, 20, "Song Tử ♊"],
+          [7, 22, "Cự Giải ♋"], [8, 22, "Sư Tử ♌"],
+          [9, 22, "Xử Nữ ♍"], [10, 22, "Thiên Bình ♎"],
+          [11, 21, "Bọ Cạp ♏"], [12, 21, "Nhân Mã ♐"],
+          [12, 31, "Ma Kết ♑"]
+        ];
+        for (const [mm, dd, name] of signs) {
+          if (m < mm || (m === mm && day <= dd)) return name;
+        }
+        return "Ma Kết ♑";
+      }
+
+      /* ----------------- Render ----------------- */
+      function renderFilters() {
+        const counts = { all: all.length };
+        all.forEach(s => {
+          counts[s.major] = (counts[s.major] || 0) + 1;
+        });
+
+        const majors = Object.keys(counts)
+          .filter(k => k !== "all")
+          .sort((a, b) => counts[b] - counts[a]);
+
+        const container = $("majorFilters");
+        container.innerHTML =
+          `<button class="chip ${currentMajor === "all" ? "active" : ""}" data-major="all">
+             Tất cả <span class="chip-count">${counts.all}</span>
+           </button>` +
+          majors.map(m => `
+            <button class="chip ${currentMajor === m ? "active" : ""}"
+                    data-major="${escapeHtml(m)}">
+              ${escapeHtml(m)} <span class="chip-count">${counts[m]}</span>
+            </button>
+          `).join("");
+
+        container.querySelectorAll(".chip").forEach(b => {
+          b.addEventListener("click", () => {
+            currentMajor = b.dataset.major;
+            applyFilter();
+          });
+        });
+      }
+
+      function renderCards(list) {
+        if (!list.length) {
+          grid.innerHTML = "";
+          $("emptyState").hidden = false;
+          $("errorState").hidden = true;
+          return;
+        }
+        $("emptyState").hidden = true;
+        $("errorState").hidden = true;
+
+        grid.innerHTML = list.map(s => {
+          const [c1, c2] = hashColor(s.student_id || s.fullname || "x");
+          return `
+            <article class="student-card" data-id="${escapeHtml(s.student_id)}">
+              <div class="card-cover" style="background: linear-gradient(135deg, ${c1}, ${c2});">
+                <div class="card-avatar">${escapeHtml(initial(s.fullname))}</div>
+              </div>
+              <div class="card-body">
+                <div class="card-id">${escapeHtml(s.student_id)}</div>
+                <h3 class="card-name">${escapeHtml(s.fullname)}</h3>
+                <div class="card-tags">
+                  <span class="card-tag tag-major">${escapeHtml(s.major)}</span>
+                </div>
+                <div class="card-meta">
+                  <span class="meta-item">
+                    <span class="meta-icon">🎂</span>
+                    ${formatDate(s.dob)}
+                  </span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span class="view-more">Xem chi tiết →</span>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        grid.querySelectorAll(".student-card").forEach(card => {
+          card.addEventListener("click", () => openDetail(card.dataset.id));
+        });
+      }
+
+      function openDetail(id) {
+        const s = all.find(x => x.student_id === id);
+        if (!s) return;
+
+        const [c1, c2] = hashColor(s.student_id);
+        const hero = document.querySelector(".detail-hero");
+        hero.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+        $("detailAvatar").textContent = initial(s.fullname);
+        $("detailAvatar").style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+        $("detailId").textContent = s.student_id;
+        $("detailIdCode").textContent = s.student_id;
+        $("detailName").textContent = s.fullname;
+        $("detailMajor").textContent = s.major;
+        $("detailDob").textContent = formatDate(s.dob);
+
+        const age = ageFrom(s.dob);
+        $("detailAge").textContent = age == null ? "—" : `${age} tuổi`;
+        $("detailZodiac").textContent = zodiac(s.dob);
+
+        openModal("detailModal");
+      }
+
+      /* ----------------- Filter ----------------- */
+      function applyFilter() {
+        renderFilters();
+        const kw = $("searchInput").value.trim().toLowerCase();
+
+        let list = all;
+        if (currentMajor !== "all") {
+          list = list.filter(s => s.major === currentMajor);
+        }
+        if (kw) {
+          list = list.filter(s =>
+            (s.student_id || "").toLowerCase().includes(kw) ||
+            (s.fullname   || "").toLowerCase().includes(kw) ||
+            (s.major      || "").toLowerCase().includes(kw)
+          );
+        }
+
+        $("searchCount").textContent =
+          (kw || currentMajor !== "all")
+            ? `${list.length} / ${all.length}`
+            : `${all.length} sinh viên`;
+
+        renderCards(list);
+      }
+
+      let searchTimer;
+      $("searchInput").addEventListener("input", () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyFilter, 150);
+      });
+
+      /* ----------------- Load ----------------- */
+      async function loadData() {
+        $("errorState").hidden = true;
+        $("emptyState").hidden = true;
+        grid.innerHTML = `
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        `;
+
+        try {
+          const res = await fetch(API_URL, {
+            headers: { "Accept": "application/json" }
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          all = Array.isArray(data) ? data : [];
+          applyFilter();
+        } catch (err) {
+          grid.innerHTML = "";
+          $("errorMessage").textContent = err.message;
+          $("errorState").hidden = false;
+          $("searchCount").textContent = "0 / 0";
+        }
+      }
+
+      loadData();
+    </script>
+  </body>
+</html>
