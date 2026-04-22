@@ -6,10 +6,20 @@ import mysql.connector
 
 
 REALM_NAME = "realm_524H0178"
-AUDIENCE = "flask-app"
+# Internal URL — backend container resolves Keycloak via docker DNS để fetch JWKS
 DISCOVERY_URL = f"http://authentication-identity-server:8080/realms/{REALM_NAME}"
-TOKEN_ISSUER = f"http://localhost:8081/realms/{REALM_NAME}"
 JWKS_URL = f"{DISCOVERY_URL}/protocol/openid-connect/certs"
+
+# Public issuer — phải khớp với `iss` claim trong token.
+# Client (Postman/browser) gọi Keycloak qua URL nào thì Keycloak ghi iss bằng URL đó.
+# Override qua biến môi trường OIDC_ISSUER khi deploy.
+TOKEN_ISSUER = os.environ.get(
+    "OIDC_ISSUER",
+    f"http://authentication-identity-server:8080/realms/{REALM_NAME}",
+)
+AUDIENCE   = os.environ.get("OIDC_AUDIENCE", "flask-app")
+# Với public client, `aud` có thể không chứa client_id → tắt verify_aud, chỉ kiểm `azp`
+VERIFY_AUD = os.environ.get("OIDC_VERIFY_AUD", "false").lower() == "true"
 
 _JWKS = None; _TS = 0
 def get_jwks():
@@ -53,8 +63,23 @@ def secure():
         return jsonify(error="Missing Bearer token"), 401
     token = auth.split(" ",1)[1]
     try:
-        payload = jwt.decode(token, get_jwks(), algorithms=["RS256"], audience=AUDIENCE, issuer=TOKEN_ISSUER)
-        return jsonify(message="Secure resource OK", preferred_username=payload.get("preferred_username"))
+        decode_kwargs = {
+            "algorithms": ["RS256"],
+            "issuer": TOKEN_ISSUER,
+            "options": {"verify_aud": VERIFY_AUD},
+        }
+        if VERIFY_AUD:
+            decode_kwargs["audience"] = AUDIENCE
+        payload = jwt.decode(token, get_jwks(), **decode_kwargs)
+        # Public client thường không có audience=flask-app, check azp thay thế
+        if not VERIFY_AUD and payload.get("azp") != AUDIENCE:
+            return jsonify(error=f"Invalid azp: {payload.get('azp')}"), 401
+        return jsonify(
+            message="Secure resource OK",
+            preferred_username=payload.get("preferred_username"),
+            issuer=payload.get("iss"),
+            azp=payload.get("azp"),
+        )
     except Exception as e:
         return jsonify(error=str(e)), 401
 

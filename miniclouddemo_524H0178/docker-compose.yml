@@ -23,9 +23,12 @@ services:
     networks: [cloud-net]
     ports: ["8085:8081"]
     environment:
-      # Internal container-to-container URL — realm name corrected
-      OIDC_ISSUER: "http://authentication-identity-server:8080/realms/realm_524H0178"
+      # PUBLIC issuer — phải khớp URL mà client (browser/Postman) dùng để lấy token.
+      # Đổi 52.74.37.125 thành domain/IP EC2 khi deploy môi trường khác.
+      OIDC_ISSUER: "http://52.74.37.125:8081/realms/realm_524H0178"
       OIDC_AUDIENCE: "flask-app"
+      # Public client — aud không chứa client_id, tắt audience check (kiểm azp thay thế)
+      OIDC_VERIFY_AUD: "false"
     restart: unless-stopped
 
   # 3 — Relational Database (MariaDB)
